@@ -1,0 +1,93 @@
+package com.rezidor.commonUtils;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import com.rezidor.dmi.facade.Dir_PersonFacade;
+import com.rezidor.dmi.mapdb.PersonValue;
+import  com.rezidor.util.*;
+
+public class ActivityLog {
+
+	private Timestamp cre_dt;
+	private Integer cre_user;
+	private Timestamp chg_dt;
+	private Integer chg_user;
+
+	private String ret; 
+
+	public ActivityLog() {super();}
+
+	public void fillActivityLog(ResultSet rs) throws SQLException {		
+		this.setCre_user(rs.getInt("CREATED_BY"));		
+		this.setCre_dt(rs.getTimestamp("CREATED_DATE"));
+		this.setChg_user(rs.getInt("CHANGED_BY"));
+		this.setChg_dt(rs.getTimestamp("CHANGED_DATE"));		
+	}
+
+	public String getLastActivity() {
+		try {
+			ret =  ((getUpdateActivity() == null) ? getCreatedActivity() : getUpdateActivity());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return ret; 
+	}
+
+	private String getCreatedActivity() throws Exception {
+		
+		if (IntegerUtils.isNotEmpty(this.cre_user)) {				          
+			ret = "Created by " + this.getUserName(this.cre_user); 	
+			if (this.cre_dt != null) { 
+				ret += " on " +  DateUtils.timeStampToString(this.cre_dt, "yyyy-MM-dd") ; 
+			}
+		}
+		return ret;
+	}
+
+	
+	private String getUpdateActivity() throws Exception {
+		
+		if (IntegerUtils.isNotEmpty(this.chg_user)) {
+			ret = "Changed by " + this.getUserName(this.chg_user); 	
+			if (this.chg_dt != null) {
+				ret += " on " +  DateUtils.timeStampToString(this.chg_dt, "yyyy-MM-dd") ; 
+			}
+		}
+		return ret;
+	}
+
+	private String getUserName(Integer personId)  {
+		String username = ""; 
+		try {
+			Dir_PersonFacade psFc = new Dir_PersonFacade(); 	
+			PersonValue user = psFc.selectPerson(personId.toString()); 			
+			username =  user.getFirstname() +  " " +  user.getLastname(); 
+		} catch (Exception e) {
+			System.out.println(e.getMessage()); 
+		}
+		return username; 
+
+	}
+
+	public Timestamp getCre_dt() {return cre_dt;}
+
+	public void setCre_dt(Timestamp cre_dt) {this.cre_dt = cre_dt;}
+
+	public Integer getCre_user() {return cre_user;}
+
+	public void setCre_user(Integer i) {this.cre_user = i;}
+
+	public Timestamp getChg_dt() {return chg_dt;}
+
+	public void setChg_dt(Timestamp chg_dt) {this.chg_dt = chg_dt;}
+
+	public Integer getChg_user() {return chg_user;}
+
+	public void setChg_user(Integer chg_user) {this.chg_user = chg_user;}
+
+	public String toString() {
+		return "ActivityLog [cre_dt=" + cre_dt + ", cre_user=" + cre_user
+				+ ", chg_dt=" + chg_dt + ", chg_user=" + chg_user + "]";
+	}
+
+}
